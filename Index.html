@@ -1,0 +1,1155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- Primary Meta Tags -->
+  <title>SchemaDock | text-to-slack & AI Database Schema Visualizer</title>
+  <meta name="description" content="The ultimate Slack bot for your database. Convert text to SQL with AI, explore your SQL database schema, and generate instant data visualizations right inside Slack.">
+  <meta name="keywords" content="slack bot, text to sql, sql database schema, slack ai bot, database visualizer, sql schema visualizer, create slack bot, visual sql, text to sql ai">
+
+  <!-- Open Graph / Facebook (For link sharing previews) -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="SchemaDock | Slack SQL Bot & AI Database Schema Visualizer">
+  <meta property="og:description" content="Convert text to SQL with AI, map your SQL database schema, and visualize data natively inside Slack. No coding required for instant insights.">
+
+  <!-- Twitter -->
+  <meta property="twitter:card" content="summary_large_image">
+  <meta property="twitter:title" content="SchemaDock | Slack SQL Bot & AI Database Schema Visualizer">
+  <meta property="twitter:description" content="The AI-powered Slack bot for your data. Map your SQL database schema, run text-to-SQL queries, and see data visualizations without leaving Slack.">
+
+
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Datatype:ital,wght@0,400;0,500;0,700;0,900;1,400;1,500&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+  <!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-BKR32GHTLH"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-BKR32GHTLH');
+</script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            alabaster:  '#F7F7F5',
+            alabaster2: '#FBFBFA',
+            navy:       '#1A2B49',
+            navyLight:  '#243B62',
+            sage:       '#E1EAE2',
+            sageDark:   '#B8CFBA',
+            steel:      '#E2EAF4',
+            steelDark:  '#B5C6DF',
+            ink:        '#2C3A4F',
+            mist:       '#8A97A8',
+            border:     'rgba(26,43,73,0.10)',
+          },
+          fontFamily: {
+            serif:  ['"Playfair Display"', 'Georgia', 'serif'],
+            sans:   ['"DM Sans"', 'system-ui', 'sans-serif'],
+            mono:   ['"DM Mono"', 'monospace'],
+          },
+        },
+      },
+    };
+  </script>
+
+  <style>
+
+    *, *::before, *::after { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background-color: #F7F7F5;
+      color: #2C3A4F;
+      font-family: 'DM Sans', system-ui, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    .rule { border-color: rgba(26,43,73,0.12); }
+
+    .serif { font-family: 'Playfair Display', Georgia, serif; }
+
+    .nav-link {
+      position: relative;
+      text-decoration: none;
+      color: #2C3A4F;
+      font-size: 0.875rem;
+      font-weight: 500;
+      letter-spacing: 0.01em;
+    }
+    .nav-link::after {
+      content: '';
+      position: absolute;
+      left: 0; bottom: -2px;
+      width: 0; height: 1px;
+      background: #1A2B49;
+      transition: width 0.35s cubic-bezier(0.4,0,0.2,1);
+    }
+    .nav-link:hover::after { width: 100%; }
+
+    /* ── Primary CTA button ── */
+    .btn-navy {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      background: #1A2B49;
+      color: #F7F7F5;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      letter-spacing: 0.03em;
+      padding: 0.65rem 1.35rem;
+      border-radius: 4px;
+      border: 1px solid transparent;
+      transition: background 0.28s ease, box-shadow 0.28s ease, transform 0.2s ease;
+      cursor: pointer;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+    .btn-navy:hover {
+      background: #243B62;
+      box-shadow: 0 4px 20px rgba(26,43,73,0.18);
+      transform: translateY(-1px);
+    }
+    .btn-navy:active { transform: translateY(0); box-shadow: none; }
+
+    /* ── Ghost CTA button ── */
+    .btn-ghost {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      background: transparent;
+      color: #1A2B49;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      letter-spacing: 0.03em;
+      padding: 0.65rem 1.35rem;
+      border-radius: 4px;
+      border: 1px solid rgba(26,43,73,0.25);
+      transition: border-color 0.28s ease, background 0.28s ease;
+      cursor: pointer;
+      text-decoration: none;
+    }
+    .btn-ghost:hover {
+      border-color: rgba(26,43,73,0.6);
+      background: rgba(26,43,73,0.04);
+    }
+
+    /* ── Pillar card hover lift ── */
+    .pillar-card {
+      transition: box-shadow 0.3s ease, transform 0.3s ease, border-color 0.3s ease;
+    }
+    .pillar-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 32px rgba(26,43,73,0.08);
+      border-color: rgba(26,43,73,0.22) !important;
+    }
+
+    /* ── Scroll-reveal: elements start invisible ── */
+    .reveal {
+      opacity: 0;
+      transform: translateY(22px);
+      transition: opacity 0.65s cubic-bezier(0.4,0,0.2,1),
+                  transform 0.65s cubic-bezier(0.4,0,0.2,1);
+    }
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ── Stagger delays ── */
+    .delay-1 { transition-delay: 0.08s; }
+    .delay-2 { transition-delay: 0.16s; }
+    .delay-3 { transition-delay: 0.24s; }
+    .delay-4 { transition-delay: 0.32s; }
+
+    /* ── Slack UI mock ── */
+    .slack-mock {
+      background: #FFFFFF;
+      border-radius: 10px;
+      border: 1px solid rgba(26,43,73,0.10);
+      box-shadow:
+        0 2px 8px rgba(26,43,73,0.06),
+        0 16px 48px rgba(26,43,73,0.08);
+      overflow: hidden;
+      font-family: 'DM Sans', sans-serif;
+    }
+
+    /* ── Schema node lines ── */
+    .schema-line {
+      stroke: rgba(26,43,73,0.18);
+      stroke-width: 1.5;
+      stroke-dasharray: 4 3;
+    }
+
+    /* ── Workflow step connector ── */
+    .step-connector {
+      width: 1px;
+      background: linear-gradient(to bottom, rgba(26,43,73,0.18), rgba(26,43,73,0.05));
+    }
+
+    /* ── Noise texture overlay for warmth ── */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.025'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 9999;
+      opacity: 0.4;
+    }
+
+    /* ── Large decorative number ── */
+    .step-num {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: clamp(3rem, 5vw, 5rem);
+      font-weight: 900;
+      line-height: 1;
+      color: rgba(26,43,73,0.07);
+      letter-spacing: -0.04em;
+      user-select: none;
+    }
+
+    /* ── Tag / badge ── */
+    .badge {
+      display: inline-flex; align-items: center; gap: 0.35rem;
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 0.3rem 0.75rem;
+      border-radius: 2px;
+    }
+
+    /* ── Testimonial quote mark ── */
+    .quote-mark {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 5rem;
+      line-height: 0.7;
+      color: rgba(26,43,73,0.08);
+    }
+
+    /* ── Mobile nav toggle ── */
+    #mobile-menu { display: none; }
+    #mobile-menu.open { display: flex; }
+  </style>
+</head>
+
+<body class="bg-alabaster">
+
+<header id="navbar"
+        class="fixed top-0 left-0 right-0 z-50 transition-all duration-300"
+        style="background: rgba(247,247,245,0.92); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);">
+
+  <!-- Top micro-rule -->
+  <div class="h-px bg-gradient-to-r from-transparent via-navy/10 to-transparent"></div>
+
+  <div class="max-w-7xl mx-auto px-6 lg:px-10">
+    <div class="flex items-center justify-between h-16">
+
+      <!-- Logo: typographic, no icon clutter -->
+      <a href="#" class="flex items-center gap-2.5 group" aria-label="SchemaDock home">
+        <!-- Minimal geometric mark -->
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="flex-shrink-0">
+          <rect x="2" y="2" width="9" height="9" rx="1.5" fill="#1A2B49"/>
+          <rect x="13" y="2" width="9" height="9" rx="1.5" fill="#1A2B49" opacity="0.3"/>
+          <rect x="2" y="13" width="9" height="9" rx="1.5" fill="#1A2B49" opacity="0.3"/>
+          <rect x="13" y="13" width="9" height="9" rx="1.5" fill="#B5C6DF"/>
+        </svg>
+        <span class="serif text-navy font-bold tracking-tight" style="font-size:1.125rem; letter-spacing:-0.01em;">
+          Schema<span style="font-style:italic;">Dock</span>
+        </span>
+      </a>
+
+      <!-- Desktop nav links -->
+      <nav class="hidden md:flex items-center gap-8">
+        <a href="#security" class="nav-link">Security</a>
+        <a href="#workflow"  class="nav-link">How It Works</a>
+        <a href="#architecture" class="nav-link">Architecture</a>
+        <a href="#" class="nav-link">Docs</a>
+      </nav>
+
+      <button id="hamburger" class="md:hidden p-2 rounded text-ink" aria-label="Toggle menu">
+        <svg id="ham-icon" width="20" height="20" viewBox="0 0 20 20" fill="none">
+          <path d="M3 5h14M3 10h14M3 15h14" stroke="#1A2B49" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Mobile menu -->
+  <div id="mobile-menu" class="flex-col md:hidden px-6 pb-5 pt-2 gap-4 border-t border-border bg-alabaster2">
+    <a href="#security"      class="nav-link py-2">Security</a>
+    <a href="#workflow"       class="nav-link py-2">How It Works</a>
+    <a href="#architecture"   class="nav-link py-2">Architecture</a>
+    <a href="#"               class="nav-link py-2">Docs</a>
+    <div class="pt-2 flex flex-col gap-2">
+      <a href="#" class="btn-ghost text-xs text-center">View Architecture</a>
+      <a href="#demo" class="btn-navy text-xs justify-center">Request Security Docs</a>
+    </div>
+  </div>
+</header>
+
+
+<section class="min-h-screen pt-16 flex items-center relative overflow-hidden">
+
+  <!-- Subtle background geometry — NOT a gradient orb -->
+  <div class="absolute top-0 right-0 w-1/2 h-full bg-steel/30 -z-10"
+       style="clip-path: polygon(12% 0, 100% 0, 100% 100%, 0% 100%)"></div>
+  <div class="absolute bottom-0 right-0 w-64 h-64 rounded-full bg-sage/40 -z-10 blur-3xl"></div>
+
+  <div class="max-w-7xl mx-auto px-6 lg:px-10 w-full py-24 lg:py-32">
+    <div class="grid lg:grid-cols-12 gap-12 lg:gap-6 items-center">
+
+      <!-- LEFT: Copy — 7 cols wide, assertive typographic hierarchy -->
+      <div class="lg:col-span-7 space-y-8">
+
+        <!-- Trust badge -->
+        <div class="reveal">
+          <span class="badge bg-sage text-navy" style="border: 1px solid rgba(26,43,73,0.12);">
+            <span style="width:6px;height:6px;background:#1A2B49;border-radius:50%;display:inline-block;"></span>
+            SOC 2 Type II  ·  GDPR Compliant  ·  Read-Only by Design
+          </span>
+        </div>
+
+        <!-- Main heading: Serif, editorial weight, ~60px -->
+        <h1 class="reveal delay-1 serif text-navy leading-tight"
+            style="font-size: clamp(2.4rem, 5vw, 3.75rem); letter-spacing: -0.02em; font-weight: 700; max-width: 26ch;">
+          Your data stays in<br/>
+          your architecture.<br/>
+          <span style="font-style:italic; color: #2C3A4F;">The insights move<br/>to Slack.</span>
+        </h1>
+
+        <!-- Subtext: functional, precise, zero fluff -->
+        <p class="reveal delay-2 text-mist leading-relaxed"
+           style="font-size:1.0625rem; max-width:48ch; font-weight:400;">
+          SchemaDock translates natural-language questions into validated SQL  directly inside Slack  without ever moving raw records outside your perimeter. Read-only configurations, automated schema mapping, zero data retention.
+        </p>
+
+        <!-- Inline stats row -->
+        <div class="reveal delay-3 flex flex-wrap gap-6 pt-2">
+          <div>
+            <div class="serif text-navy font-bold" style="font-size:1.75rem; letter-spacing:-0.03em;">0 bytes</div>
+            <div class="text-mist text-xs font-medium tracking-wide uppercase mt-0.5">Data retained</div>
+          </div>
+          <div class="w-px bg-border self-stretch hidden sm:block"></div>
+          <div>
+            <div class="serif text-navy font-bold" style="font-size:1.75rem; letter-spacing:-0.03em;">&lt;400ms</div>
+            <div class="text-mist text-xs font-medium tracking-wide uppercase mt-0.5">Median response</div>
+          </div>
+          <div class="w-px bg-border self-stretch hidden sm:block"></div>
+          <div>
+            <div class="serif text-navy font-bold" style="font-size:1.75rem; letter-spacing:-0.03em;">Read-only</div>
+            <div class="text-mist text-xs font-medium tracking-wide uppercase mt-0.5">Always enforced</div>
+          </div>
+        </div>
+
+        <!-- CTA cluster -->
+        <div class="reveal delay-4 flex flex-wrap gap-3 pt-2">
+          <a href="#demo" class="btn-navy" style="font-size:0.875rem; padding: 0.8rem 1.75rem;">
+            Coming Soon!
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7h8M8 4l3 3-3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </a>
+          <!-- <a href="#security" class="btn-ghost" style="font-size:0.875rem; padding: 0.8rem 1.75rem;">
+            Read Security Brief
+          </a> -->
+        </div>
+      </div>
+
+      <!-- RIGHT: Slack UI mockup + schema diagram — 5 cols -->
+      <div class="lg:col-span-5 reveal delay-2">
+        <div class="relative">
+
+          <!-- Slack message thread mock -->
+          <div class="slack-mock">
+            <!-- Slack topbar -->
+            <div class="flex items-center gap-3 px-4 py-3 border-b border-slate-100 bg-white">
+              <div class="flex gap-1.5">
+                <div class="w-3 h-3 rounded-full bg-red-300/70"></div>
+                <div class="w-3 h-3 rounded-full bg-amber-300/70"></div>
+                <div class="w-3 h-3 rounded-full bg-green-300/70"></div>
+              </div>
+              <div class="flex items-center gap-2 ml-2">
+                <div class="w-4 h-4 rounded bg-navy/10 flex items-center justify-center">
+                  <svg width="9" height="9" viewBox="0 0 9 9" fill="none"><rect x="0.5" y="0.5" width="3.5" height="3.5" rx="0.5" fill="#1A2B49"/><rect x="5" y="0.5" width="3.5" height="3.5" rx="0.5" fill="#1A2B49" opacity="0.35"/><rect x="0.5" y="5" width="3.5" height="3.5" rx="0.5" fill="#1A2B49" opacity="0.35"/><rect x="5" y="5" width="3.5" height="3.5" rx="0.5" fill="#B5C6DF"/></svg>
+                </div>
+                <span class="text-xs font-semibold text-ink">#analytics-team</span>
+              </div>
+            </div>
+
+            <!-- Messages -->
+            <div class="px-4 py-4 space-y-4 bg-white">
+
+              <!-- User message -->
+              <div class="flex gap-3 items-start">
+                <div class="w-8 h-8 rounded-lg flex-shrink-0 flex items-center justify-center text-white text-xs font-bold"
+                     style="background:#5B68A4; font-family:'DM Sans', sans-serif;">JK</div>
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-baseline gap-2">
+                    <span class="text-xs font-semibold text-ink">Jamie K.</span>
+                    <span class="text-xs text-mist/70">2:41 PM</span>
+                  </div>
+                  <div class="mt-1 bg-slate-50 border border-slate-100 rounded-lg px-3 py-2.5 text-sm text-ink"
+                       style="font-size:0.8125rem;">
+                    @schemadock Show me top 10 enterprise accounts by MRR where churn risk &gt; 0.7 for this quarter
+                  </div>
+                </div>
+              </div>
+
+              <!-- SchemaDock bot reply -->
+              <div class="flex gap-3 items-start">
+                <div class="w-8 h-8 rounded-lg flex-shrink-0 flex items-center justify-center"
+                     style="background:#E2EAF4; border: 1px solid rgba(26,43,73,0.10);">
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1" y="1" width="5.5" height="5.5" rx="1" fill="#1A2B49"/><rect x="7.5" y="1" width="5.5" height="5.5" rx="1" fill="#1A2B49" opacity="0.3"/><rect x="1" y="7.5" width="5.5" height="5.5" rx="1" fill="#1A2B49" opacity="0.3"/><rect x="7.5" y="7.5" width="5.5" height="5.5" rx="1" fill="#B5C6DF"/></svg>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-baseline gap-2">
+                    <span class="text-xs font-semibold text-navy">SchemaDock</span>
+                    <span class="text-xs" style="color:#6366F1; font-size:0.65rem; font-weight:600; background:#EEF2FF; padding: 1px 5px; border-radius: 3px;">App</span>
+                    <span class="text-xs text-mist/70">2:41 PM</span>
+                  </div>
+
+                  <!-- Pill: Read-only notice -->
+                  <div class="mt-2 flex items-center gap-1.5 text-xs text-mist mb-2">
+                    <svg width="11" height="11" viewBox="0 0 11 11" fill="none"><circle cx="5.5" cy="5.5" r="4.5" stroke="#B5C6DF" stroke-width="1"/><path d="M5.5 3.5v2.5l1.5 1" stroke="#8A97A8" stroke-width="1" stroke-linecap="round"/></svg>
+                    <span style="font-size:0.68rem;">Read-only replica · PII masked · 312ms</span>
+                  </div>
+
+                  <!-- SQL snippet -->
+                  <div class="rounded-lg overflow-hidden border border-slate-100 mb-3">
+                    <div class="bg-slate-50 px-3 py-1.5 flex items-center justify-between border-b border-slate-100">
+                      <span class="text-xs text-mist font-medium tracking-wide" style="font-size:0.65rem; text-transform:uppercase; letter-spacing:0.06em;">Generated SQL</span>
+                      <span class="text-xs text-sageDark font-medium" style="font-size:0.65rem;">✓ Validated</span>
+                    </div>
+                    <pre class="bg-white px-3 py-2.5 text-xs overflow-x-auto font-mono leading-relaxed" style="font-size:0.7rem; color:#2C3A4F;"><span style="color:#8A97A8;">SELECT</span> a.account_name,
+       a.mrr,
+       r.churn_score
+<span style="color:#8A97A8;">FROM</span>  accounts a
+<span style="color:#8A97A8;">JOIN</span>  risk_scores r <span style="color:#8A97A8;">ON</span> a.id = r.account_id
+<span style="color:#8A97A8;">WHERE</span> r.churn_score <span style="color:#B5C6DF;">&gt; 0.7</span>
+  <span style="color:#8A97A8;">AND</span> a.tier = <span style="color:#B8CFBA;">'enterprise'</span>
+<span style="color:#8A97A8;">ORDER BY</span> a.mrr <span style="color:#8A97A8;">DESC</span>
+<span style="color:#8A97A8;">LIMIT</span> 10;</pre>
+                  </div>
+
+                  <!-- Results table -->
+                  <div class="rounded-lg border border-slate-100 overflow-hidden">
+                    <table class="w-full text-xs" style="font-size:0.72rem;">
+                      <thead>
+                        <tr class="bg-slate-50 border-b border-slate-100">
+                          <th class="text-left px-3 py-2 text-mist font-semibold tracking-wide" style="font-size:0.65rem; text-transform:uppercase; letter-spacing:0.05em;">Account</th>
+                          <th class="text-right px-3 py-2 text-mist font-semibold tracking-wide" style="font-size:0.65rem; text-transform:uppercase; letter-spacing:0.05em;">MRR</th>
+                          <th class="text-right px-3 py-2 text-mist font-semibold tracking-wide" style="font-size:0.65rem; text-transform:uppercase; letter-spacing:0.05em;">Risk</th>
+                        </tr>
+                      </thead>
+                      <tbody class="divide-y divide-slate-50">
+                        <tr class="bg-white hover:bg-slate-50/50 transition-colors">
+                          <td class="px-3 py-2 font-medium text-ink">Meridian Corp</td>
+                          <td class="px-3 py-2 text-right text-ink">$24,800</td>
+                          <td class="px-3 py-2 text-right"><span style="background:#FEF2F2;color:#DC2626;padding:2px 6px;border-radius:3px;font-size:0.65rem;font-weight:600;">0.89</span></td>
+                        </tr>
+                        <tr class="bg-white hover:bg-slate-50/50 transition-colors">
+                          <td class="px-3 py-2 font-medium text-ink">Axel Systems</td>
+                          <td class="px-3 py-2 text-right text-ink">$19,200</td>
+                          <td class="px-3 py-2 text-right"><span style="background:#FEF2F2;color:#DC2626;padding:2px 6px;border-radius:3px;font-size:0.65rem;font-weight:600;">0.82</span></td>
+                        </tr>
+                        <tr class="bg-white hover:bg-slate-50/50 transition-colors">
+                          <td class="px-3 py-2 font-medium text-ink" style="color:#8A97A8;">Vortex Holdings</td>
+                          <td class="px-3 py-2 text-right" style="color:#8A97A8;">$17,100</td>
+                          <td class="px-3 py-2 text-right"><span style="background:#FFFBEB;color:#D97706;padding:2px 6px;border-radius:3px;font-size:0.65rem;font-weight:600;">0.74</span></td>
+                        </tr>
+                        <tr style="background:#F7F7F5;">
+                          <td class="px-3 py-2 text-mist" colspan="3" style="font-size:0.65rem; text-align:center; letter-spacing:0.04em;">+7 more rows · View full results ↗</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Input bar -->
+            <div class="px-4 py-3 border-t border-slate-100 bg-slate-50/80 flex items-center gap-3">
+              <div class="flex-1 bg-white rounded-lg border border-slate-200 px-3 py-2 text-xs text-mist/60"
+                   style="font-size:0.78rem;">
+                Ask anything about your data…
+              </div>
+              <button class="btn-navy" style="padding:0.4rem 0.85rem; font-size:0.72rem; border-radius:6px;">Send</button>
+            </div>
+          </div>
+
+          <!-- Floating schema diagram badge -->
+          <div class="absolute -bottom-6 -left-6 bg-alabaster2 border border-border rounded-xl p-3 shadow-lg"
+               style="width: 160px;">
+            <div class="text-xs text-mist font-semibold uppercase tracking-wider mb-2" style="font-size:0.62rem; letter-spacing:0.07em;">Schema Map</div>
+            <svg viewBox="0 0 140 90" xmlns="http://www.w3.org/2000/svg" class="w-full">
+              <!-- Nodes -->
+              <rect x="2" y="10" width="50" height="22" rx="3" fill="#E2EAF4" stroke="rgba(26,43,73,0.15)" stroke-width="1"/>
+              <text x="27" y="25" text-anchor="middle" font-size="7" font-family="DM Mono, monospace" fill="#1A2B49">accounts</text>
+
+              <rect x="88" y="2" width="50" height="22" rx="3" fill="#E1EAE2" stroke="rgba(26,43,73,0.15)" stroke-width="1"/>
+              <text x="113" y="17" text-anchor="middle" font-size="7" font-family="DM Mono, monospace" fill="#1A2B49">risk_scores</text>
+
+              <rect x="88" y="60" width="50" height="22" rx="3" fill="#F7F7F5" stroke="rgba(26,43,73,0.15)" stroke-width="1"/>
+              <text x="113" y="75" text-anchor="middle" font-size="7" font-family="DM Mono, monospace" fill="#1A2B49">events</text>
+
+              <rect x="2" y="60" width="50" height="22" rx="3" fill="#F7F7F5" stroke="rgba(26,43,73,0.15)" stroke-width="1"/>
+              <text x="27" y="75" text-anchor="middle" font-size="7" font-family="DM Mono, monospace" fill="#1A2B49">segments</text>
+
+              <!-- Lines -->
+              <line x1="52" y1="21" x2="88" y2="13" class="schema-line"/>
+              <line x1="52" y1="25" x2="88" y2="71" class="schema-line"/>
+              <line x1="27" y1="32" x2="27" y2="60" class="schema-line"/>
+              <line x1="113" y1="24" x2="113" y2="60" class="schema-line"/>
+
+              <!-- Join dot -->
+              <circle cx="70" cy="36" r="3.5" fill="#1A2B49" opacity="0.7"/>
+            </svg>
+            <div class="mt-1 text-mist" style="font-size:0.58rem; letter-spacing:0.04em;">4 tables · Auto-mapped</div>
+          </div>
+
+          <!-- Floating security shield -->
+          <div class="absolute -top-4 -right-4 bg-navy text-alabaster2 rounded-xl p-3 shadow-lg flex items-center gap-2"
+               style="min-width:140px;">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+              <path d="M9 1.5L2.25 4.5V9c0 3.728 2.903 7.213 6.75 8.25C12.847 16.213 15.75 12.728 15.75 9V4.5L9 1.5z" fill="rgba(225,234,226,0.15)" stroke="#B8CFBA" stroke-width="1.2"/>
+              <path d="M6 9l2 2 4-4" stroke="#B8CFBA" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <div>
+              <div class="text-xs font-semibold" style="font-size:0.7rem; color:#E1EAE2;">Read-Only Lock</div>
+              <div class="text-xs" style="font-size:0.6rem; color:rgba(225,234,226,0.55);">No writes. Ever.</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<section id="security" class="py-24 lg:py-32">
+  <div class="max-w-7xl mx-auto px-6 lg:px-10">
+
+    <!-- Section label -->
+    <div class="reveal flex items-center gap-3 mb-10">
+      <div class="w-6 h-px bg-navy/30"></div>
+      <span class="text-xs font-semibold uppercase tracking-widest text-mist" style="letter-spacing:0.12em;">Security Architecture</span>
+    </div>
+
+    <!-- Heading + subtext: asymmetric, left-anchored -->
+    <div class="reveal delay-1 grid lg:grid-cols-12 gap-8 mb-16">
+      <div class="lg:col-span-6">
+        <h2 class="serif text-navy leading-tight"
+            style="font-size: clamp(2rem, 4vw, 3rem); letter-spacing:-0.02em; font-weight:700;">
+          The Iron Curtain.<br/>
+          <span style="font-style:italic; font-weight:400;">Not a metaphor.</span>
+        </h2>
+      </div>
+      <div class="lg:col-span-5 lg:col-start-8 flex items-end">
+        <p class="text-mist leading-relaxed" style="font-size:0.9375rem;">
+          Three non-negotiable architectural layers that make SchemaDock the only SQL assistant governance teams will approve on their first review.
+        </p>
+      </div>
+    </div>
+
+    <!-- Three pillars grid -->
+    <div class="grid md:grid-cols-3 gap-5">
+
+      <!-- Pillar 1: Read-Only Isolation -->
+      <div class="pillar-card reveal delay-1 rounded-xl p-7 relative overflow-hidden"
+           style="background:#F0F4FA; border: 1px solid rgba(26,43,73,0.10);">
+        <div class="absolute top-0 right-0 w-24 h-24 rounded-full bg-steelDark/20 -mr-8 -mt-8 blur-2xl pointer-events-none"></div>
+
+        <!-- Icon: geometric, monochrome -->
+        <div class="w-10 h-10 rounded-lg flex items-center justify-center mb-6"
+             style="background: rgba(26,43,73,0.08); border: 1px solid rgba(26,43,73,0.10);">
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+            <rect x="2" y="2" width="14" height="10" rx="2" stroke="#1A2B49" stroke-width="1.3"/>
+            <path d="M5 8h8M5 6h3" stroke="#1A2B49" stroke-width="1.2" stroke-linecap="round"/>
+            <path d="M9 12v4M6 16h6" stroke="#1A2B49" stroke-width="1.2" stroke-linecap="round"/>
+          </svg>
+        </div>
+
+        <div class="text-xs font-bold text-mist uppercase tracking-widest mb-2" style="font-size:0.65rem; letter-spacing:0.1em;">Pillar 01</div>
+        <h3 class="serif text-navy font-bold mb-3" style="font-size:1.3rem; letter-spacing:-0.01em;">Read-Only Database Isolation</h3>
+        <p class="text-mist leading-relaxed text-sm">
+          SchemaDock connects exclusively to a designated read-replica. Connection strings are vault-stored and never exposed. DML statements are syntactically blocked before reaching the query engine — not filtered; structurally impossible.
+        </p>
+
+        <!-- Spec list -->
+        <ul class="mt-5 space-y-2">
+          <li class="flex items-center gap-2 text-xs text-ink">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#1A2B49" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Dedicated replica credentials
+          </li>
+          <li class="flex items-center gap-2 text-xs text-ink">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#1A2B49" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            DML/DDL structural block layer
+          </li>
+          <li class="flex items-center gap-2 text-xs text-ink">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#1A2B49" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Query rate limits &amp; timeout caps
+          </li>
+        </ul>
+      </div>
+
+      <!-- Pillar 2: PII Redaction -->
+      <div class="pillar-card reveal delay-2 rounded-xl p-7 relative overflow-hidden"
+           style="background:#EAEFEA; border: 1px solid rgba(26,43,73,0.10);">
+        <div class="absolute top-0 right-0 w-24 h-24 rounded-full bg-sageDark/30 -mr-8 -mt-8 blur-2xl pointer-events-none"></div>
+
+        <div class="w-10 h-10 rounded-lg flex items-center justify-center mb-6"
+             style="background: rgba(26,43,73,0.07); border: 1px solid rgba(26,43,73,0.10);">
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+            <circle cx="9" cy="9" r="7" stroke="#1A2B49" stroke-width="1.3"/>
+            <path d="M5.5 9c1-2 6-2 7 0" stroke="#1A2B49" stroke-width="1.2" stroke-linecap="round"/>
+            <circle cx="9" cy="7" r="1.5" fill="#1A2B49"/>
+            <path d="M3 14l12-12" stroke="#1A2B49" stroke-width="1.2" stroke-linecap="round"/>
+          </svg>
+        </div>
+
+        <div class="text-xs font-bold text-mist uppercase tracking-widest mb-2" style="font-size:0.65rem; letter-spacing:0.1em;">Pillar 02</div>
+        <h3 class="serif text-navy font-bold mb-3" style="font-size:1.3rem; letter-spacing:-0.01em;">In-Flight PII Redaction Engine</h3>
+        <p class="text-mist leading-relaxed text-sm">
+          Column-level classification runs on schema metadata, not data content. Emails, SSNs, card numbers, and custom regex patterns are masked in query results before the response payload reaches Slack's API surface.
+        </p>
+
+        <ul class="mt-5 space-y-2">
+          <li class="flex items-center gap-2 text-xs text-ink">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#1A2B49" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Schema-level PII labeling
+          </li>
+          <li class="flex items-center gap-2 text-xs text-ink">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#1A2B49" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Configurable custom redaction rules
+          </li>
+          <li class="flex items-center gap-2 text-xs text-ink">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#1A2B49" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Zero raw PII in logs or transit
+          </li>
+        </ul>
+      </div>
+
+      <!-- Pillar 3: Local Proxy Architecture -->
+      <div class="pillar-card reveal delay-3 rounded-xl p-7 relative overflow-hidden"
+           style="background:#F7F7F5; border: 1px solid rgba(26,43,73,0.10);">
+        <div class="absolute top-0 right-0 w-24 h-24 rounded-full bg-navy/5 -mr-8 -mt-8 blur-2xl pointer-events-none"></div>
+
+        <div class="w-10 h-10 rounded-lg flex items-center justify-center mb-6"
+             style="background: rgba(26,43,73,0.06); border: 1px solid rgba(26,43,73,0.10);">
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+            <rect x="1.5" y="6" width="6" height="6" rx="1.5" stroke="#1A2B49" stroke-width="1.3"/>
+            <rect x="10.5" y="6" width="6" height="6" rx="1.5" stroke="#1A2B49" stroke-width="1.3"/>
+            <path d="M7.5 9h3" stroke="#1A2B49" stroke-width="1.2" stroke-dasharray="2 1.5"/>
+            <path d="M4.5 6V4.5a3 3 0 019 0V6" stroke="#1A2B49" stroke-width="1.2" stroke-linecap="round"/>
+          </svg>
+        </div>
+
+        <div class="text-xs font-bold text-mist uppercase tracking-widest mb-2" style="font-size:0.65rem; letter-spacing:0.1em;">Pillar 03</div>
+        <h3 class="serif text-navy font-bold mb-3" style="font-size:1.3rem; letter-spacing:-0.01em;">Local Infrastructure-First Proxy</h3>
+        <p class="text-mist leading-relaxed text-sm">
+          The SchemaDock proxy agent runs inside your VPC. Raw query results never traverse the public internet. Only structured, redacted summary payloads are transmitted outbound — fully auditable via your existing SIEM stack.
+        </p>
+
+        <ul class="mt-5 space-y-2">
+          <li class="flex items-center gap-2 text-xs text-ink">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#1A2B49" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            VPC-resident agent, self-hosted
+          </li>
+          <li class="flex items-center gap-2 text-xs text-ink">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#1A2B49" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            SIEM-compatible audit logs
+          </li>
+          <li class="flex items-center gap-2 text-xs text-ink">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#1A2B49" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            mTLS encrypted outbound only
+          </li>
+        </ul>
+      </div>
+
+    </div>
+
+    <!-- Compliance badge strip -->
+    <div class="reveal mt-8 flex flex-wrap gap-3 items-center">
+      <span class="text-xs text-mist" style="font-size:0.72rem;">Compliance coverage:</span>
+      <span class="badge bg-steel text-navy" style="border: 1px solid rgba(26,43,73,0.12);">SOC 2 Type II</span>
+      <span class="badge bg-sage text-navy" style="border: 1px solid rgba(26,43,73,0.12);">GDPR Art. 25</span>
+      <span class="badge bg-steel text-navy" style="border: 1px solid rgba(26,43,73,0.12);">HIPAA</span>
+      <span class="badge bg-sage text-navy" style="border: 1px solid rgba(26,43,73,0.12);">ISO 27001</span>
+      <span class="badge bg-alabaster2 text-navy" style="border: 1px solid rgba(26,43,73,0.12);">CCPA</span>
+    </div>
+  </div>
+</section>
+
+<section id="workflow" class="py-24 lg:py-32 border-t border-border">
+  <div class="max-w-7xl mx-auto px-6 lg:px-10">
+
+    <div class="reveal flex items-center gap-3 mb-10">
+      <div class="w-6 h-px bg-navy/30"></div>
+      <span class="text-xs font-semibold uppercase tracking-widest text-mist" style="letter-spacing:0.12em;">The Workflow</span>
+    </div>
+
+    <div class="reveal delay-1 grid lg:grid-cols-12 gap-8 mb-16">
+      <div class="lg:col-span-7">
+        <h2 class="serif text-navy leading-tight"
+            style="font-size: clamp(1.9rem, 3.5vw, 2.75rem); letter-spacing:-0.02em; font-weight:700;">
+          Three steps from connection<br/>to insight — zero IT tickets.
+        </h2>
+      </div>
+    </div>
+
+    <!-- Steps grid — horizontal on desktop, stacked on mobile -->
+    <div class="grid md:grid-cols-3 gap-0 relative">
+
+      <!-- Step 1 -->
+      <div class="reveal delay-1 p-6 md:p-8">
+        <!-- Step number (decorative, large) -->
+        <div class="step-num mb-2">01</div>
+        <div class="w-8 h-8 rounded-lg flex items-center justify-center mb-5 relative z-10"
+             style="background:#1A2B49; border: 1px solid rgba(26,43,73,0.3);">
+          <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
+            <rect x="1" y="4" width="13" height="9" rx="1.5" stroke="#E2EAF4" stroke-width="1.2"/>
+            <path d="M4 4V3a3.5 3.5 0 017 0v1" stroke="#E2EAF4" stroke-width="1.2" stroke-linecap="round"/>
+            <circle cx="7.5" cy="8.5" r="1.5" fill="#E2EAF4"/>
+          </svg>
+        </div>
+        <h3 class="serif text-navy font-bold mb-3" style="font-size:1.2rem; letter-spacing:-0.01em;">
+          Connect Replicated Database
+        </h3>
+        <p class="text-mist text-sm leading-relaxed">
+          Point SchemaDock at your read-replica endpoint. Credentials are stored in your vault. A one-time connectivity check confirms read-only access — no production DB ever involved.
+        </p>
+        <div class="mt-5 bg-steel/50 rounded-lg p-3 font-mono text-xs text-navy/60" style="font-size:0.7rem;">
+          <span class="text-mist">replica</span>: rds.us-east-1.amazonaws.com<br/>
+          <span class="text-mist">mode</span>: <span style="color:#1A2B49; font-weight:600;">READ_ONLY</span><br/>
+          <span class="text-mist">vault</span>: aws-secretsmanager
+        </div>
+      </div>
+
+      <!-- Step 2 -->
+      <div class="reveal delay-2 p-6 md:p-8 md:border-x border-border">
+        <div class="step-num mb-2">02</div>
+        <div class="w-8 h-8 rounded-lg flex items-center justify-center mb-5 relative z-10"
+             style="background:#1A2B49; border: 1px solid rgba(26,43,73,0.3);">
+          <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
+            <path d="M2 4h11M2 8h7M2 12h5" stroke="#E2EAF4" stroke-width="1.2" stroke-linecap="round"/>
+            <circle cx="12" cy="10.5" r="2" stroke="#B8CFBA" stroke-width="1.1"/>
+            <path d="M11.3 10.5l.7.7 1.4-1.4" stroke="#B8CFBA" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <h3 class="serif text-navy font-bold mb-3" style="font-size:1.2rem; letter-spacing:-0.01em;">
+          Map Glossary Ontology
+        </h3>
+        <p class="text-mist text-sm leading-relaxed">
+          Auto-discovery surfaces table and column names. You annotate business terms — "MRR", "churn risk", "active user" — which become the vocabulary your Slack users speak in plain English.
+        </p>
+        <div class="mt-5 space-y-1.5">
+          <div class="flex items-center justify-between bg-sage/60 rounded px-3 py-2 text-xs">
+            <span class="text-ink font-medium">monthly_recurring_revenue</span>
+            <span class="text-mist font-mono" style="font-size:0.65rem;">→ "MRR"</span>
+          </div>
+          <div class="flex items-center justify-between bg-sage/40 rounded px-3 py-2 text-xs">
+            <span class="text-ink font-medium">churn_prediction_score</span>
+            <span class="text-mist font-mono" style="font-size:0.65rem;">→ "churn risk"</span>
+          </div>
+          <div class="flex items-center justify-between bg-sage/25 rounded px-3 py-2 text-xs">
+            <span class="text-ink font-medium">last_login_at IS NOT NULL</span>
+            <span class="text-mist font-mono" style="font-size:0.65rem;">→ "active user"</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 3 -->
+      <div class="reveal delay-3 p-6 md:p-8">
+        <div class="step-num mb-2">03</div>
+        <div class="w-8 h-8 rounded-lg flex items-center justify-center mb-5 relative z-10"
+             style="background:#1A2B49; border: 1px solid rgba(26,43,73,0.3);">
+          <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
+            <path d="M2.5 11.5L5 9l2.5 2L10 7l2.5 2.5" stroke="#E2EAF4" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+            <rect x="1" y="2" width="13" height="11" rx="2" stroke="#E2EAF4" stroke-width="1.1"/>
+          </svg>
+        </div>
+        <h3 class="serif text-navy font-bold mb-3" style="font-size:1.2rem; letter-spacing:-0.01em;">
+          Non-Technical Teams Query in Slack
+        </h3>
+        <p class="text-mist text-sm leading-relaxed">
+          Sales, CS, finance, and ops teams get self-serve data access. No SQL knowledge, no BI tool license, no ticket to engineering. Just ask @schemadock in any permitted channel.
+        </p>
+        <div class="mt-5 bg-white rounded-lg border border-slate-100 p-3">
+          <div class="flex items-start gap-2">
+            <div class="w-5 h-5 rounded bg-purple-100 flex-shrink-0 flex items-center justify-center text-xs font-bold text-purple-600" style="font-size:0.5rem;">CS</div>
+            <div>
+              <span class="text-xs font-semibold text-ink">Customer Success</span>
+              <p class="text-xs text-mist mt-0.5 leading-relaxed">@schemadock which enterprise accounts haven't logged in this week?</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<section id="architecture" class="py-24 lg:py-32 border-t border-border"
+         style="background: #F0F3F8;">
+  <div class="max-w-7xl mx-auto px-6 lg:px-10">
+
+    <div class="reveal flex items-center gap-3 mb-10">
+      <div class="w-6 h-px bg-navy/30"></div>
+      <span class="text-xs font-semibold uppercase tracking-widest text-mist" style="letter-spacing:0.12em;">Data Flow Architecture</span>
+    </div>
+
+    <div class="reveal delay-1 grid lg:grid-cols-12 gap-12 items-center">
+      <div class="lg:col-span-5">
+        <h2 class="serif text-navy leading-tight mb-5"
+            style="font-size: clamp(1.9rem, 3.5vw, 2.75rem); letter-spacing:-0.02em; font-weight:700;">
+          Your perimeter.<br/>
+          <span style="font-style:italic; font-weight:400;">Your control.</span>
+        </h2>
+        <p class="text-mist leading-relaxed mb-8" style="font-size:0.9375rem;">
+          The SchemaDock proxy agent never touches your production database. It runs in your VPC, queries your replica, and only transmits anonymized, redacted summaries outbound — nothing raw, nothing unmasked.
+        </p>
+
+        <div class="space-y-4">
+          <div class="flex items-start gap-3">
+            <div class="w-5 h-5 rounded flex-shrink-0 flex items-center justify-center mt-0.5"
+                 style="background: rgba(26,43,73,0.08);">
+              <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1.5 5h7M6 2.5l2.5 2.5L6 7.5" stroke="#1A2B49" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+            <div>
+              <div class="text-sm font-semibold text-ink">Outbound-only data flow</div>
+              <div class="text-xs text-mist mt-0.5">Raw query results stay within your VPC boundary at all times</div>
+            </div>
+          </div>
+          <div class="flex items-start gap-3">
+            <div class="w-5 h-5 rounded flex-shrink-0 flex items-center justify-center mt-0.5"
+                 style="background: rgba(26,43,73,0.08);">
+              <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M5 1a4 4 0 100 8A4 4 0 005 1zm0 0v4l2.5 1.5" stroke="#1A2B49" stroke-width="1.2" stroke-linecap="round"/></svg>
+            </div>
+            <div>
+              <div class="text-sm font-semibold text-ink">Full audit trail</div>
+              <div class="text-xs text-mist mt-0.5">Every query, user, channel, and result is logged for compliance review</div>
+            </div>
+          </div>
+          <div class="flex items-start gap-3">
+            <div class="w-5 h-5 rounded flex-shrink-0 flex items-center justify-center mt-0.5"
+                 style="background: rgba(26,43,73,0.08);">
+              <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><rect x="1" y="3" width="8" height="5" rx="1" stroke="#1A2B49" stroke-width="1.2"/><path d="M3.5 3V2.5a1.5 1.5 0 013 0V3" stroke="#1A2B49" stroke-width="1.2" stroke-linecap="round"/></svg>
+            </div>
+            <div>
+              <div class="text-sm font-semibold text-ink">mTLS encrypted transit</div>
+              <div class="text-xs text-mist mt-0.5">Mutual TLS on all proxy-to-cloud communication, no exceptions</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Architecture SVG diagram -->
+      <div class="reveal delay-2 lg:col-span-7">
+        <div class="rounded-xl border border-border overflow-hidden" style="background:#FBFBFA;">
+          <div class="px-4 py-3 border-b border-border flex items-center gap-2">
+            <div class="w-2 h-2 rounded-full" style="background:#B5C6DF;"></div>
+            <span class="text-xs text-mist font-medium tracking-wide" style="font-size:0.7rem; text-transform:uppercase; letter-spacing:0.07em;">SchemaDock Data Flow — Production Architecture</span>
+          </div>
+          <div class="p-6">
+            <svg viewBox="0 0 600 300" xmlns="http://www.w3.org/2000/svg" class="w-full h-auto">
+              <defs>
+                <marker id="arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto">
+                  <path d="M1 1l6 3-6 3z" fill="rgba(26,43,73,0.4)"/>
+                </marker>
+                <marker id="arrow-green" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto">
+                  <path d="M1 1l6 3-6 3z" fill="#B8CFBA"/>
+                </marker>
+              </defs>
+
+              <!-- VPC boundary -->
+              <rect x="10" y="10" width="370" height="280" rx="8" fill="none" stroke="rgba(26,43,73,0.08)" stroke-width="1.5" stroke-dasharray="5 4"/>
+              <text x="20" y="28" font-size="9" font-family="DM Mono, monospace" fill="rgba(26,43,73,0.3)" font-weight="500">YOUR VPC PERIMETER</text>
+
+              <!-- Production DB (grayed out, not connected) -->
+              <rect x="30" y="70" width="100" height="60" rx="5" fill="#F0F3F8" stroke="rgba(26,43,73,0.12)" stroke-width="1"/>
+              <text x="80" y="96" text-anchor="middle" font-size="8.5" font-family="DM Sans, sans-serif" fill="#8A97A8" font-weight="600">Production</text>
+              <text x="80" y="110" text-anchor="middle" font-size="8.5" font-family="DM Sans, sans-serif" fill="#8A97A8">Database</text>
+              <!-- Not connected label -->
+              <rect x="35" y="62" width="68" height="14" rx="2" fill="#FEF2F2"/>
+              <text x="69" y="72" text-anchor="middle" font-size="6.5" font-family="DM Sans, sans-serif" fill="#DC2626" font-weight="600" letter-spacing="0.05em">NOT CONNECTED</text>
+
+              <!-- Replica DB -->
+              <rect x="30" y="180" width="100" height="60" rx="5" fill="#E2EAF4" stroke="rgba(26,43,73,0.18)" stroke-width="1.5"/>
+              <text x="80" y="205" text-anchor="middle" font-size="8.5" font-family="DM Sans, sans-serif" fill="#1A2B49" font-weight="700">Read Replica</text>
+              <text x="80" y="219" text-anchor="middle" font-size="8.5" font-family="DM Sans, sans-serif" fill="#2C3A4F">Database</text>
+              <rect x="35" y="228" width="90" height="6" rx="1.5" fill="rgba(26,43,73,0.06)"/>
+
+              <!-- Arrow: replica → proxy -->
+              <line x1="130" y1="210" x2="185" y2="210" stroke="rgba(26,43,73,0.3)" stroke-width="1.5" marker-end="url(#arrow)" stroke-dasharray="3 2"/>
+              <text x="157" y="205" text-anchor="middle" font-size="6.5" font-family="DM Mono, monospace" fill="rgba(26,43,73,0.4)">SQL result</text>
+
+              <!-- Proxy agent box -->
+              <rect x="185" y="175" width="115" height="70" rx="6" fill="#1A2B49"/>
+              <text x="242" y="201" text-anchor="middle" font-size="8.5" font-family="DM Sans, sans-serif" fill="#E2EAF4" font-weight="700">SchemaDock</text>
+              <text x="242" y="214" text-anchor="middle" font-size="8.5" font-family="DM Sans, sans-serif" fill="#B5C6DF">Proxy Agent</text>
+              <rect x="196" y="223" width="90" height="14" rx="3" fill="rgba(225,234,226,0.12)" stroke="rgba(225,234,226,0.2)" stroke-width="0.8"/>
+              <text x="241" y="233" text-anchor="middle" font-size="6.5" font-family="DM Mono, monospace" fill="#B8CFBA">VPC-resident</text>
+
+              <!-- PII redaction label -->
+              <rect x="185" y="138" width="115" height="28" rx="4" fill="#E1EAE2" stroke="rgba(26,43,73,0.10)" stroke-width="1"/>
+              <text x="242" y="153" text-anchor="middle" font-size="7" font-family="DM Sans, sans-serif" fill="#1A2B49" font-weight="600">PII Redaction Engine</text>
+              <text x="242" y="162" text-anchor="middle" font-size="6.5" font-family="DM Mono, monospace" fill="#8A97A8">in-flight masking</text>
+              <!-- Arrow down from redaction to proxy -->
+              <line x1="242" y1="166" x2="242" y2="175" stroke="rgba(26,43,73,0.25)" stroke-width="1.2" marker-end="url(#arrow)"/>
+
+              <!-- Arrow: proxy → Slack API (outbound only) -->
+              <line x1="300" y1="210" x2="385" y2="210" stroke="#B8CFBA" stroke-width="2" marker-end="url(#arrow-green)"/>
+              <text x="342" y="205" text-anchor="middle" font-size="6.5" font-family="DM Mono, monospace" fill="#8A97A8">redacted only</text>
+              <text x="342" y="217" text-anchor="middle" font-size="6" font-family="DM Mono, monospace" fill="#B8CFBA">mTLS ↗</text>
+
+              <!-- Slack API (outside VPC) -->
+              <rect x="420" y="40" width="160" height="250" rx="6" fill="#F7F7F5" stroke="rgba(26,43,73,0.06)" stroke-width="1"/>
+              <text x="500" y="60" text-anchor="middle" font-size="8" font-family="DM Sans, sans-serif" fill="#8A97A8" font-weight="600" letter-spacing="0.06em" text-transform="uppercase">SLACK SURFACE</text>
+              <line x1="430" y1="67" x2="570" y2="67" stroke="rgba(26,43,73,0.07)" stroke-width="1"/>
+
+              <!-- Slack mockup simplified -->
+              <rect x="432" y="76" width="136" height="80" rx="4" fill="white" stroke="rgba(26,43,73,0.08)" stroke-width="0.8"/>
+              <rect x="440" y="85" width="20" height="20" rx="3" fill="#E2EAF4"/>
+              <text x="450" y="99" text-anchor="middle" font-size="6" font-family="DM Mono, monospace" fill="#1A2B49">QS</text>
+              <rect x="466" y="85" width="94" height="8" rx="2" fill="#F0F4FA"/>
+              <rect x="466" y="96" width="70" height="6" rx="1.5" fill="#F0F4FA"/>
+              <rect x="440" y="115" width="120" height="30" rx="3" fill="#F7F7F7"/>
+              <rect x="447" y="121" width="80" height="5" rx="1" fill="rgba(26,43,73,0.08)"/>
+              <rect x="447" y="129" width="60" height="5" rx="1" fill="rgba(26,43,73,0.05)"/>
+
+              <!-- Slack user input -->
+              <rect x="432" y="170" width="136" height="110" rx="4" fill="white" stroke="rgba(26,43,73,0.08)" stroke-width="0.8"/>
+              <rect x="440" y="178" width="20" height="20" rx="10" fill="#7C3AED" opacity="0.7"/>
+              <text x="450" y="192" text-anchor="middle" font-size="6" font-family="DM Mono, monospace" fill="white">CS</text>
+              <rect x="465" y="178" width="95" height="20" rx="3" fill="#F0F0F0"/>
+              <rect x="469" y="184" width="70" height="4" rx="1" fill="rgba(0,0,0,0.1)"/>
+              <rect x="469" y="191" width="50" height="4" rx="1" fill="rgba(0,0,0,0.07)"/>
+              <text x="500" y="224" text-anchor="middle" font-size="7" font-family="DM Sans, sans-serif" fill="#8A97A8">redacted results only</text>
+              <rect x="440" y="230" width="120" height="40" rx="3" fill="#E2EAF4" opacity="0.6"/>
+              <rect x="447" y="237" width="60" height="4" rx="1" fill="rgba(26,43,73,0.12)"/>
+              <rect x="447" y="244" width="80" height="4" rx="1" fill="rgba(26,43,73,0.08)"/>
+              <rect x="447" y="251" width="50" height="4" rx="1" fill="rgba(26,43,73,0.06)"/>
+
+              <!-- VPC label line -->
+              <line x1="10" y1="148" x2="40" y2="148" stroke="rgba(26,43,73,0.08)" stroke-width="1"/>
+
+              <!-- "Outside" label -->
+              <text x="395" y="28" text-anchor="middle" font-size="8" font-family="DM Mono, monospace" fill="rgba(26,43,73,0.2)">PUBLIC INTERNET ▸</text>
+              <line x1="340" y1="32" x2="600" y2="32" stroke="rgba(26,43,73,0.05)" stroke-width="1" stroke-dasharray="4 3"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="demo" class="border-t border-border py-32 lg:py-40">
+  <div class="max-w-4xl mx-auto px-6 lg:px-10 text-center">
+
+    <!-- Overline -->
+    <div class="reveal flex items-center justify-center gap-3 mb-10">
+      <div class="w-12 h-px bg-navy/20"></div>
+      <span class="text-xs font-semibold uppercase tracking-widest text-mist" style="letter-spacing:0.12em;">Sandboxed Demo</span>
+      <div class="w-12 h-px bg-navy/20"></div>
+    </div>
+
+    <!-- Main heading: maximum editorial scale -->
+    <h2 class="reveal delay-1 serif text-navy leading-tight mb-6"
+        style="font-size: clamp(2.5rem, 6vw, 4.5rem); letter-spacing:-0.025em; font-weight:700;">
+      See it run against<br/>
+      <span style="font-style:italic; font-weight:400;">your actual schema.</span>
+    </h2>
+
+    <!-- Subtext -->
+    <p class="reveal delay-2 text-mist leading-relaxed mx-auto mb-12"
+       style="font-size:1.0625rem; max-width:44ch;">
+      We provision a sandboxed environment against a copy of your schema — not mock data — within 24 hours. Bring your security architect. We welcome the scrutiny.
+    </p>
+
+    <!-- CTA buttons -->
+    <div class="reveal delay-3 flex flex-col sm:flex-row gap-4 justify-center items-center mb-16">
+      <a href="#" class="btn-navy" style="font-size:0.9375rem; padding: 1rem 2.25rem;">
+        Coming Soon
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3.5 8h9M9 4.5l3.5 3.5L9 11.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </a>
+      <!-- <a href="#" class="btn-ghost" style="font-size:0.9375rem; padding: 1rem 2.25rem;">
+        Download Security Brief (PDF)
+      </a> -->
+    </div>
+
+    <!-- Trust row -->
+    <div class="reveal delay-4 flex flex-wrap justify-center gap-8 opacity-50">
+      <div class="flex items-center gap-2 text-xs text-mist">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1L1.5 3.5V7c0 2.9 2.25 5.6 5.25 6.4 3-.8 5.25-3.5 5.25-6.4V3.5L7 1z" stroke="#8A97A8" stroke-width="1.1"/><path d="M4.5 7l2 2 3-3" stroke="#8A97A8" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        No production DB access required
+      </div>
+      <div class="flex items-center gap-2 text-xs text-mist">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="5.5" stroke="#8A97A8" stroke-width="1.1"/><path d="M7 4v3.5l2 1.5" stroke="#8A97A8" stroke-width="1.1" stroke-linecap="round"/></svg>
+        Provisioned within 24 hours
+      </div>
+      <div class="flex items-center gap-2 text-xs text-mist">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1.5" y="4" width="11" height="8" rx="1.5" stroke="#8A97A8" stroke-width="1.1"/><path d="M4.5 4V3a2.5 2.5 0 015 0v1" stroke="#8A97A8" stroke-width="1.1" stroke-linecap="round"/></svg>
+        NDA available before schema share
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<footer class="border-t border-border py-12">
+  <div class="max-w-7xl mx-auto px-6 lg:px-10">
+    <div class="grid sm:grid-cols-2 lg:grid-cols-5 gap-8">
+
+      <!-- Brand column -->
+      <div class="lg:col-span-2 space-y-4">
+        <a href="#" class="flex items-center gap-2.5">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+            <rect x="2" y="2" width="9" height="9" rx="1.5" fill="#1A2B49"/>
+            <rect x="13" y="2" width="9" height="9" rx="1.5" fill="#1A2B49" opacity="0.3"/>
+            <rect x="2" y="13" width="9" height="9" rx="1.5" fill="#1A2B49" opacity="0.3"/>
+            <rect x="13" y="13" width="9" height="9" rx="1.5" fill="#B5C6DF"/>
+          </svg>
+          <span class="serif text-navy font-bold" style="font-size:1.05rem; letter-spacing:-0.01em;">Query<span style="font-style:italic;">Slack</span></span>
+        </a>
+        <p class="text-mist text-xs leading-relaxed" style="max-width:28ch;">
+          Enterprise Text-to-SQL for Slack. Read-only by design. Secure by architecture.
+        </p>
+        <div class="flex gap-3 pt-2">
+          <span class="badge bg-sage text-navy" style="border: 1px solid rgba(26,43,73,0.10); font-size:0.6rem;">SOC 2</span>
+          <span class="badge bg-steel text-navy" style="border: 1px solid rgba(26,43,73,0.10); font-size:0.6rem;">GDPR</span>
+          <span class="badge bg-alabaster2 text-navy" style="border: 1px solid rgba(26,43,73,0.10); font-size:0.6rem;">HIPAA</span>
+        </div>
+      </div>
+
+      <!-- Links -->
+      <div>
+        <div class="text-xs font-semibold text-ink uppercase tracking-widest mb-4" style="font-size:0.65rem; letter-spacing:0.1em;">Product</div>
+        <ul class="space-y-2.5">
+          <li><a href="#" class="nav-link text-mist" style="font-size:0.8125rem;">Security</a></li>
+          <li><a href="#" class="nav-link text-mist" style="font-size:0.8125rem;">Architecture</a></li>
+          <li><a href="#" class="nav-link text-mist" style="font-size:0.8125rem;">Changelog</a></li>
+          <li><a href="#" class="nav-link text-mist" style="font-size:0.8125rem;">Roadmap</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <div class="text-xs font-semibold text-ink uppercase tracking-widest mb-4" style="font-size:0.65rem; letter-spacing:0.1em;">Resources</div>
+        <ul class="space-y-2.5">
+          <li><a href="#" class="nav-link text-mist" style="font-size:0.8125rem;">Documentation</a></li>
+          <li><a href="#" class="nav-link text-mist" style="font-size:0.8125rem;">API Reference</a></li>
+          <li><a href="#" class="nav-link text-mist" style="font-size:0.8125rem;">Security Brief</a></li>
+          <li><a href="#" class="nav-link text-mist" style="font-size:0.8125rem;">Blog</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <div class="text-xs font-semibold text-ink uppercase tracking-widest mb-4" style="font-size:0.65rem; letter-spacing:0.1em;">Company</div>
+        <ul class="space-y-2.5">
+          <li><a href="#" class="nav-link text-mist" style="font-size:0.8125rem;">About</a></li>
+          <li><a href="#" class="nav-link text-mist" style="font-size:0.8125rem;">Careers</a></li>
+          <li><a href="#" class="nav-link text-mist" style="font-size:0.8125rem;">Privacy</a></li>
+          <li><a href="#" class="nav-link text-mist" style="font-size:0.8125rem;">Terms</a></li>
+        </ul>
+      </div>
+
+    </div>
+
+    <div class="mt-12 pt-6 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-3">
+      <span class="text-xs text-mist/90" style="font-size:0.7rem;">© 2025 SchemaDock, Inc. All rights reserved.</span>
+      <span class="text-xs text-mist/90" style="font-size:0.7rem; font-family:'DM Mono', monospace;">v2.4.1 · VPC-native · Zero data retention</span>
+    </div>
+  </div>
+</footer>
+
+
+<script>
+$(function() {
+
+  $('#hamburger').on('click', function() {
+    const $menu = $('#mobile-menu');
+    $menu.toggleClass('open');
+    // Swap icon
+    const isOpen = $menu.hasClass('open');
+    if (isOpen) {
+      $('#ham-icon path').attr('d', 'M4 4l12 12M4 16L16 4');
+    } else {
+      $('#ham-icon path').attr('d', 'M3 5h14M3 10h14M3 15h14');
+    }
+  });
+
+  $(window).on('scroll', function() {
+    const scrolled = $(this).scrollTop() > 20;
+    $('#navbar').css({
+      'box-shadow': scrolled
+        ? '0 1px 0 rgba(26,43,73,0.08), 0 4px 24px rgba(26,43,73,0.04)'
+        : 'none'
+    });
+  });
+
+  const observer = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting) {
+        $(entry.target).addClass('visible');
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+
+  // Observe all .reveal elements
+  $('.reveal').each(function() {
+    observer.observe(this);
+  });
+
+  $('a[href^="#"]').on('click', function(e) {
+    const target = $(this.getAttribute('href'));
+    if (target.length) {
+      e.preventDefault();
+      $('#mobile-menu').removeClass('open');
+      $('html, body').animate({
+        scrollTop: target.offset().top - 64  // account for fixed navbar
+      }, 600, 'swing');
+    }
+  });
+
+  const placeholder = 'Ask anything about your data…';
+  let i = 0;
+  const $input = $('.slack-mock').find('.text-mist\\/60').first();
+
+  if ($input.length) {
+    $input.text('');
+    const interval = setInterval(function() {
+      if (i <= placeholder.length) {
+        $input.text(placeholder.slice(0, i));
+        i++;
+      } else {
+        clearInterval(interval);
+        // After full text is shown, blink cursor
+        setInterval(function() {
+          const cur = $input.text();
+          if (cur.endsWith('|')) {
+            $input.text(cur.slice(0, -1));
+          } else {
+            $input.text(cur + '|');
+          }
+        }, 600);
+      }
+    }, 50);
+  }
+
+});
+</script>
+
+</body>
+</html>
